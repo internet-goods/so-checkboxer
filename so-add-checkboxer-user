@@ -1,0 +1,35 @@
+# so-add-checkboxer-user - Secure Provisioning with Random Credentials
+
+# 1. Generate a random 24-character alphanumeric password
+USER_NAME="checkboxer_svc"
+USER_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 24)
+
+echo "-------------------------------------------------------"
+echo "[*] INITIALIZING SECURITY ONION CHECK-BOXER USER"
+echo "-------------------------------------------------------"
+
+# 2. Execute the Security Onion Elasticsearch Query
+# We use the internal so-elasticsearch-query wrapper to avoid SSL/Auth hurdles locally
+sudo so-elasticsearch-query _security/user/$USER_NAME -X POST -d "
+{
+  \"password\" : \"$USER_PASS\",
+  \"roles\" : [ \"viewer\", \"kibana_user\" ],
+  \"full_name\" : \"Check Boxer Service\",
+  \"email\" : \"checkboxer@internet-goods.com\"
+}" > /dev/null 2>&1
+
+# 3. Validation and Output
+if [ $? -eq 0 ]; then
+    echo "[+] SUCCESS: Service account '$USER_NAME' is active."
+    echo ""
+    echo "    USER:     $USER_NAME"
+    echo "    PASSWORD: $USER_PASS"
+    echo ""
+    echo "[!] Paste these credentials into your 'checkboxer' game config."
+    echo "[!] Run 'sudo so-allow' on this host to permit Port 9200 access."
+    echo "-------------------------------------------------------"
+else
+    echo "[!] ERROR: Failed to create user. Ensure you are running this on the Manager node."
+    echo "-------------------------------------------------------"
+    exit 1
+fi

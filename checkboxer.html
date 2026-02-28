@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CHECK BOXER v0.2</title>
+    <style>
+        :root { --neon: #00ff41; --danger: #ff3131; --bg: #0d0208; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #dashboard { border: 2px solid var(--neon); padding: 20px; background: rgba(0, 255, 65, 0.05); width: 520px; margin-bottom: 10px; }
+        .input-group { margin-bottom: 10px; display: flex; justify-content: space-between; }
+        input { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 5px; width: 60%; }
+        #timer { font-size: 2em; font-weight: bold; text-align: right; color: var(--danger); }
+        #grid { display: grid; grid-template-columns: repeat(16, 30px); gap: 2px; border: 1px solid #333; padding: 5px; }
+        .cell { width: 30px; height: 30px; background: #111; border: 1px solid #222; transition: 0.1s; position: relative; }
+        .cell::after { content: attr(data-octet); font-size: 8px; color: #444; position: absolute; bottom: 1px; right: 1px; }
+        .target { background: var(--danger); cursor: crosshair; box-shadow: inset 0 0 8px #000; animation: blink 0.8s infinite; }
+        .clicked { background: var(--neon) !important; box-shadow: 0 0 15px var(--neon); animation: none; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        button { background: var(--neon); color: #000; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #fff; }
+    </style>
+</head>
+<body>
+
+<div id="dashboard">
+    <div id="timer">00.00s</div>
+    <h2>CHECK BOXER [v0.2]</h2>
+    <div class="input-group">Manager IP: <input id="so-ip" value="192.168.1.100"></div>
+    <div class="input-group">Username:   <input id="so-user" value="checkboxer_svc"></div>
+    <div class="input-group">Password:   <input id="so-pass" type="password" placeholder="Paste from script"></div>
+    <button onclick="runNetworkScan()">INITIATE SCAN (CURL)</button>
+    <p id="status">Status: Standby. Ready for RFC1918 scan.</p>
+</div>
+
+<div id="grid"></div>
+
+<script>
+    let activeIndices = [];
+    let hits = 0;
+    let timerStart;
+    let loop;
+
+    function setupGrid() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 256; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.index = i;
+            cell.dataset.octet = i;
+            grid.appendChild(cell);
+        }
+    }
+
+    async function runNetworkScan() {
+        const status = document.getElementById('status');
+        const ip = document.getElementById('so-ip').value;
+        const user = document.getElementById('so-user').value;
+        const pass = document.getElementById('so-pass').value;
+
+        status.innerText = "Attempting Elasticsearch connection...";
+        
+        try {
+            // Logic for a real Elastic Query (CORS permitting) or simulation
+            // In a real environment, browser security usually requires a local proxy
+            // to talk to SO's self-signed certs and avoid CORS.
+            const rawData = await fetchInternalIps(ip, user, pass);
+            
+            status.innerText = `SCAN COMPLETE: ${rawData.length} internal nodes found sending traffic.`;
+            beginGame(rawData);
+        } catch (e) {
+            status.innerText = "Error: Check Console (likely CORS or IP connectivity).";
+            console.error(e);
+        }
+    }
+
+    async function fetchInternalIps(ip, user, pass) {
+        // This simulates the result of:
+        // curl -u user:pass -XPOST https://ip:9200/logstash-*/_search -d '{"query": {"match": {"network.direction": "outbound"}}}'
+        return new Promise(res => {
+            setTimeout(() => {
+                const count = Math.floor(Math.random() * 12) + 4;
+                const found = [];
+                while(found.length < count) {
+                    let r = Math.floor(Math.random() * 256);
+                    if(!found.includes(r)) found.push(r);
+                }
+                res(found);
+            }, 1200);
+        });
+    }
+
+    function beginGame(indices) {
+        setupGrid();
+        activeIndices = indices;
+        hits = 0;
+        timerStart = Date.now();
+        
+        indices.forEach(idx => {
+            const cell = document.querySelector(`[data-index="${idx}"]`);
+            cell.classList.add('target');
+            cell.onclick = function() {
+                if(!this.classList.contains('clicked')) {
+                    this.classList.add('clicked');
+                    hits++;
+                    if(hits === activeIndices.length) win();
+                }
+            };
+        });
+
+        loop = setInterval(() => {
+            document.getElementById('timer').innerText = ((Date.now() - timerStart)/1000).toFixed(2) + "s";
+        }, 50);
+    }
+
+    function win() {
+        clearInterval(loop);
+        document.getElementById('status').innerText = "THREATS NEUTRALIZED. LOGS CLEARED.";
+    }
+
+    setupGrid();
+</script>
+</body>
+</html>

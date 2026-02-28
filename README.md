@@ -6,11 +6,3 @@ Copy checkboxer to web server and verify it can connect to your elastic search g
 Go to http://webserver/checkboxer.html to see your Secrity Onion hosts active on RFC1918.
 Check all the boxes!
 Beat your best time!
-
-More Levels Coming Soon :)
-             ___  
-  .'|   .'|=|_.'  
-.'  | .'  |___    
-|   | |   |`._|=. 
-|   | `.  |  __|| 
-|___|   `.|=|_.''2026

@@ -15,7 +15,7 @@ sudo so-elasticsearch-query _security/user/$USER_NAME -X POST -d "
   \"password\" : \"$USER_PASS\",
   \"roles\" : [ \"viewer\", \"kibana_user\" ],
   \"full_name\" : \"Check Boxer Service\",
-  \"email\" : \"checkboxer@internet-goods.com\"
+  \"email\" : \"checkboxer@hostname.local\"
 }" > /dev/null 2>&1
 
 # 3. Validation and Output
